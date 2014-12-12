@@ -175,7 +175,7 @@ int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES-1] = {
 	 256,
 #endif
 #ifdef CONFIG_HIGHMEM
-	 64,
+	 32,
 #endif
 	 32,
 };
@@ -2482,8 +2482,7 @@ rebalance:
 	 * If we failed to make any progress reclaiming, then we are
 	 * running out of options and have to consider going OOM
 	 */
-#define SHOULD_CONSIDER_OOM !did_some_progress
-	if (SHOULD_CONSIDER_OOM) {
+	if (!did_some_progress) {
 		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
 			if (oom_killer_disabled)
 				goto nopage;
@@ -2491,7 +2490,6 @@ rebalance:
 			if ((current->flags & PF_DUMPCORE) &&
 			    !(gfp_mask & __GFP_NOFAIL))
 				goto nopage;
-
 			page = __alloc_pages_may_oom(gfp_mask, order,
 					zonelist, high_zoneidx,
 					nodemask, preferred_zone,
@@ -5271,9 +5269,6 @@ void setup_per_zone_wmarks(void)
  */
 static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 {
-#ifdef CONFIG_FIX_INACTIVE_RATIO
-	zone->inactive_ratio = 1;
-#else
 	unsigned int gb, ratio;
 
 	/* Zone size in gigabytes */
@@ -5284,7 +5279,6 @@ static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 		ratio = 1;
 
 	zone->inactive_ratio = ratio;
-#endif
 }
 
 static void __meminit setup_per_zone_inactive_ratio(void)
